@@ -2,6 +2,10 @@
 
 A party damage meter for The Spell Brigade (Unity IL2CPP, BepInEx 6).
 
+![Brigade DPS with full spell names, initials, icons only, and player totals only](https://raw.githubusercontent.com/slikfoul/BrigadeDps/main/docs/images/display-options-en.png)
+
+*English interface preview with sample combat data: full names, initials, icons only, and player totals only.*
+
 ## Features
 
 - Total damage, DPS and damage share for each player and spell, with native spell names and icons.
