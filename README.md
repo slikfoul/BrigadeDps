@@ -27,7 +27,6 @@ Game artwork is loaded at runtime and is not bundled with the mod. A fallback fr
 | Open settings | F5 |
 | Move meter | Drag the table's top row |
 | Move settings | Drag the settings title |
-| Release the game cursor | Hold Alt |
 
 Enable **Abbreviate spell names** to display initials, for example `Wings of Dawn` becomes `WOD`. Disable **Show spell names** for icons only. If an icon is unavailable, initials keep the spell identifiable.
 
