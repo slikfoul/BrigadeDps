@@ -58,7 +58,7 @@ The **host** needs Brigade DPS to collect statistics. Players who want to see th
 
 ## Installation
 
-Import `slikfoul-BrigadeDps-0.1.10.zip` using **Import local mod** in r2modman, enable BrigadeDps and launch with **Start modded**. BepInExPack IL2CPP 6.0.788 is the required dependency.
+Import `slikfoul-BrigadeDps-1.0.0.zip` using **Import local mod** in r2modman, enable BrigadeDps and launch with **Start modded**. BepInExPack IL2CPP 6.0.788 is the required dependency.
 
 For manual installation into a profile with BepInExPack IL2CPP, place `BrigadeDps.dll` in `BepInEx/plugins/slikfoul-BrigadeDps/`. Close the game before updating.
 
@@ -76,4 +76,4 @@ Building requires .NET SDK 9 and an installed copy of the game with BepInExPack 
 
 Source code is in `src`, standalone checks in `tests`, and package metadata and the icon in `packaging`. The packaging script creates the r2modman ZIP in `dist`. Game assemblies, extracted artwork and local research files are not included in the repository or package.
 
-Version 0.1.10 builds without warnings and passes 124 standalone checks covering statistics, network data, localization, window positioning, boss-result retention and DPS mode selection. These checks do not replace in-game UI and multiplayer testing.
+Version 1.0.0 builds without warnings and passes 124 standalone checks covering statistics, network data, localization, window positioning, boss-result retention and DPS mode selection. These checks do not replace in-game UI and multiplayer testing.

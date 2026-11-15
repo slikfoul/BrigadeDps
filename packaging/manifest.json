@@ -1,8 +1,8 @@
 {
   "name": "BrigadeDps",
-  "version_number": "0.1.10",
+  "version_number": "1.0.0",
   "website_url": "https://github.com/slikfoul/BrigadeDps",
-  "description": "Party and per-spell DPS, boss damage shares, RU/EN settings, spell initials or icons only, and a compact auto-sized meter. Host required.",
+  "description": "Party and per-spell DPS, boss damage shares, spell initials or icons only, and a compact auto-sized meter. Host required.",
   "dependencies": [
     "BepInEx-BepInExPack_IL2CPP-6.0.788"
   ]

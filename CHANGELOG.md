@@ -1,3 +1,11 @@
+# 1.0.0
+- Party and per-spell damage, DPS and damage shares with native spell icons and names.
+- Choose rolling DPS or the game's own spell DPS in the in-game settings.
+- Separate boss statistics with configurable retention after defeat.
+- A compact, automatically sized meter with native ornamental artwork and a continuous frame.
+- Movable meter and settings windows, configurable growth directions, and full spell names, initials or icons only.
+- Host-synchronized statistics for multiplayer sessions and results-screen display.
+
 # 0.1.10
 - Switch player and spell DPS in F5 between the default rolling interval and the game's native values.
 - Native spell DPS uses damage since the spell was equipped divided by its elapsed game time; player DPS sums equipped spells.
