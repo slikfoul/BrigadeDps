@@ -2,7 +2,7 @@
 
 A party damage meter for The Spell Brigade (Unity IL2CPP, BepInEx 6).
 
-![Brigade DPS with full spell names, initials, and player totals only](https://raw.githubusercontent.com/slikfoul/BrigadeDps/main/docs/images/display-options-en.png)
+![Brigade DPS with full spell names, initials, and player totals only](https://raw.githubusercontent.com/slikfoul/BrigadeDps/main/docs/images/display-options-three-modes-en.png)
 
 *English interface preview with sample combat data: full names, initials, and player totals only.*
 
