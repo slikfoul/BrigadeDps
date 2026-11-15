@@ -1,3 +1,8 @@
+# 0.1.10
+- Switch player and spell DPS in F5 between the default rolling interval and the game's native values.
+- Native spell DPS uses damage since the spell was equipped divided by its elapsed game time; player DPS sums equipped spells.
+- Each viewer chooses their own mode. Boss DPS keeps its rolling interval and freezes after defeat.
+
 # 0.1.9
 - A single continuous outer frame and background, with a transparent ornamental divider between boss and party statistics.
 - The divider retains its side curls without adding a second stone border.

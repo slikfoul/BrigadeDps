@@ -238,6 +238,7 @@ public sealed class MeterView : MonoBehaviour
             d => cfg.Height.Value = Mathf.Clamp(cfg.Height.Value + .05f * d, .3f, .95f), ref y);
         Stepper("Заклинаний на игрока", () => cfg.SpellLimit.Value.ToString(),
             d => cfg.SpellLimit.Value = Math.Clamp(cfg.SpellLimit.Value + d, 1, 20), ref y);
+        DpsModeSetting(ref y);
         Stepper("Окно УВС (задаёт хост)", () => $"{(GameBridge.IsHost || !GameBridge.Running ? cfg.Window.Value : GameBridge.Current.Window)} {Tr("с")}",
             d => { if (GameBridge.IsHost || !GameBridge.Running) cfg.Window.Value = Math.Clamp(cfg.Window.Value + d, 1, 60); }, ref y);
         Shortcut("Показать / скрыть", cfg.ToggleKey, ref y);
@@ -246,6 +247,16 @@ public sealed class MeterView : MonoBehaviour
         Text(settingsBody, UiText.Help,
             4, y + 10, 504, 110, 12, Muted);
         settingsBody.sizeDelta = new Vector2(522, y + 130);
+    }
+
+    [HideFromIl2Cpp]
+    private void DpsModeSetting(ref float y)
+    {
+        Text(settingsBody, "УВС команды и заклинаний", 4, y, 326, 31, 15, Paper);
+        var value = Button(settingsBody, "", 350, y, 150, 29, () =>
+            cfg.DpsMode.Value = cfg.DpsMode.Value == DpsDisplayMode.Rolling ? DpsDisplayMode.Game : DpsDisplayMode.Rolling);
+        settingsRefresh.Add(() => value.text = Tr(cfg.DpsMode.Value == DpsDisplayMode.Game ? "Как в игре" : "За интервал"));
+        y += 37;
     }
 
     [HideFromIl2Cpp]
@@ -346,7 +357,7 @@ public sealed class MeterView : MonoBehaviour
         double party = state.Players.Sum(p => p.Damage);
         foreach (var player in state.Players)
         {
-            AddLine(PlayerName(player), player.Dps, player.Damage, Percent(player.Damage, party), PlayerTint(player.Color), -1, true);
+            AddLine(PlayerName(player), DpsDisplay.Select(cfg.DpsMode.Value, player.Dps, player.GameDps), player.Damage, Percent(player.Damage, party), PlayerTint(player.Color), -1, true);
             if (!cfg.Spells.Value) continue;
             int count = 0;
             foreach (var spell in player.Spells)
@@ -354,7 +365,7 @@ public sealed class MeterView : MonoBehaviour
                 if (!UiText.IsSpell(spell.Spell)) continue;
                 if (count++ >= cfg.SpellLimit.Value) break;
                 var name = UiText.SpellLabel(SpellName(spell.Spell), cfg.SpellNames.Value, cfg.AbbreviateSpells.Value);
-                AddLine(name, spell.Dps, spell.Damage, Percent(spell.Damage, player.Damage), Paper, spell.Spell, false);
+                AddLine(name, DpsDisplay.Select(cfg.DpsMode.Value, spell.Dps, spell.GameDps), spell.Damage, Percent(spell.Damage, player.Damage), Paper, spell.Spell, false);
             }
         }
         for (int i = used; i < lines.Count; i++) lines[i].Root.gameObject.SetActive(false);
@@ -408,7 +419,7 @@ public sealed class MeterView : MonoBehaviour
         // A game update may temporarily omit an icon; keep such a spell identifiable.
         if (!player && sprite == null && string.IsNullOrEmpty(name)) name = UiText.SpellLabel(SpellName(spell), true, true);
         var row = Next();
-        row.Set(name, dps.HasValue ? Number(dps.Value) : "", Number(damage), share, tint, sprite, player,
+        row.Set(name, dps.HasValue ? Number(dps.Value) : "—", Number(damage), share, tint, sprite, player,
             player ? 0 : (sprite != null ? 23 : 8));
         row.SpellInset = !player && (!cfg.SpellNames.Value || cfg.AbbreviateSpells.Value) ? 8 : 0;
     }

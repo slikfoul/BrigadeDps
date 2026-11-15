@@ -15,6 +15,7 @@ internal static class GameBridge
     internal const int ExplosionSource = -10, TornadoSource = -20, MiscSource = -30;
     private static readonly BattleLedger ledger = new();
     private static readonly HashSet<ulong> observedBosses = new(), livingBosses = new();
+    private static PlayerStats[] nativePlayerStats = Array.Empty<PlayerStats>();
     private static RunManager run;
     private static RunOverviewPanel results;
     private static CustomMessagingManager messaging;
@@ -64,7 +65,7 @@ internal static class GameBridge
             {
                 lastTime = Clock;
                 ledger.FinishBoss(lastBossDeath);
-                Current = ledger.Snapshot(lastTime, EntryPoint.Settings.Window.Value);
+                Current = CreateSnapshot();
                 Publish();
             }
             if (!Running) return;
@@ -77,11 +78,47 @@ internal static class GameBridge
                     if (!player.IsSpawned) continue;
                     ledger.Identify(player.OwnerClientId, player.GetDisplayName(), ColorUtility.ToHtmlStringRGB(player.PlayerColor));
                 }
+                nativePlayerStats = Object.FindObjectsOfType<PlayerStats>().ToArray();
             }
-            Current = ledger.Snapshot(lastTime, EntryPoint.Settings.Window.Value);
+            Current = CreateSnapshot();
             if (Time.unscaledTime >= nextSend) Publish();
         }
         catch (Exception ex) { Error("Update", ex); }
+    }
+
+    private static MeterSnapshot CreateSnapshot()
+    {
+        var result = ledger.Snapshot(lastTime, EntryPoint.Settings.Window.Value);
+        foreach (var player in result.Players)
+        {
+            // Retain the last native sample if the player object is already gone
+            // while the run's final snapshot is being assembled.
+            var previous = Current.Players.FirstOrDefault(p => p.Id == player.Id);
+            if (previous != null)
+            {
+                player.GameDps = previous.GameDps;
+                foreach (var spell in player.Spells)
+                    spell.GameDps = previous.Spells.FirstOrDefault(s => s.Spell == spell.Spell)?.GameDps;
+            }
+            if (ended) continue; // Keep results fixed even if the Unity clock advances before teardown.
+            var native = nativePlayerStats.FirstOrDefault(p => p != null && !p.WasCollected && p.IsSpawned && p.OwnerClientId == player.Id);
+            if (native == null) continue;
+            try
+            {
+                var values = new Dictionary<int, double?>();
+                foreach (var spell in native.GetEquippedSpellStats())
+                {
+                    var attributes = spell.Value;
+                    if (attributes == null) continue;
+                    values[(int)spell.Key] = DpsDisplay.NativeValue(attributes.Dps, attributes.TotalPerformedDamage, attributes.TotalTime);
+                }
+                player.GameDps = DpsDisplay.Sum(values.Values);
+                foreach (var spell in player.Spells)
+                    spell.GameDps = values.TryGetValue(spell.Spell, out var value) ? value : null;
+            }
+            catch (Exception ex) { Error("Native spell DPS", ex); }
+        }
+        return result;
     }
 
     private static void Publish()
@@ -113,6 +150,8 @@ internal static class GameBridge
                 if (p == null || p.Spells == null || p.Spells.Count > 256 || !double.IsFinite(p.Damage) || !double.IsFinite(p.Dps) ||
                     !double.IsFinite(p.BossDamage) || !double.IsFinite(p.BossDps) || p.Damage < 0 || p.BossDamage < 0) return;
                 if (p.Spells.Any(s => s == null || !double.IsFinite(s.Dps) || !double.IsFinite(s.Damage) || s.Dps < 0 || s.Damage < 0)) return;
+                if (p.GameDps.HasValue && (!double.IsFinite(p.GameDps.Value) || p.GameDps.Value < 0)) return;
+                if (p.Spells.Any(s => s.GameDps.HasValue && (!double.IsFinite(s.GameDps.Value) || s.GameDps.Value < 0))) return;
             }
             Current = snapshot; Received = true;
         }
@@ -123,6 +162,7 @@ internal static class GameBridge
     {
         run = instance; ended = false; lastTime = 0; lastBossDeath = 0;
         ledger.Clear(); observedBosses.Clear(); livingBosses.Clear();
+        nativePlayerStats = Array.Empty<PlayerStats>();
         Current = new MeterSnapshot(); Received = false; nextSend = nextRoster = 0;
     }
 
@@ -145,7 +185,7 @@ internal static class GameBridge
             {
                 lastTime = Clock;
                 if (ledger.BossActive) ledger.FinishBoss(livingBosses.Count == 0 ? lastBossDeath : lastTime);
-                Current = ledger.Snapshot(lastTime, EntryPoint.Settings.Window.Value);
+                Current = CreateSnapshot();
                 Publish();
             }
         }
@@ -154,7 +194,22 @@ internal static class GameBridge
     }
 
     [HarmonyPatch(typeof(RunOverviewPanel), nameof(RunOverviewPanel.Open)), HarmonyPostfix]
-    private static void ResultsShown(RunOverviewPanel __instance) { results = __instance; ended = true; }
+    private static void ResultsShown(RunOverviewPanel __instance)
+    {
+        results = __instance;
+        try
+        {
+            if (IsHost && !ended)
+            {
+                lastTime = Clock;
+                if (ledger.BossActive) ledger.FinishBoss(livingBosses.Count == 0 ? lastBossDeath : lastTime);
+                Current = CreateSnapshot();
+                Publish();
+            }
+        }
+        catch (Exception ex) { Error("Results snapshot", ex); }
+        finally { ended = true; }
+    }
 
     private static void ObserveBoss(EnemyHealthContainer enemy)
     {

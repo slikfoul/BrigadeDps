@@ -41,6 +41,31 @@ public sealed class SpellScore
     public int Spell { get; set; }
     public double Damage { get; set; }
     public double Dps { get; set; }
+    public double? GameDps { get; set; }
+}
+
+public enum DpsDisplayMode { Rolling, Game }
+
+public static class DpsDisplay
+{
+    public static double? Select(DpsDisplayMode mode, double rolling, double? native) =>
+        mode == DpsDisplayMode.Game ? native : rolling;
+
+    public static double? NativeValue(double value, double damage, double elapsed) =>
+        double.IsFinite(value) && value >= 0 ? value :
+        damage == 0 && elapsed <= 0 ? 0 : null;
+
+    public static double? Sum(IEnumerable<double?> values)
+    {
+        double total = 0;
+        bool any = false;
+        foreach (var value in values)
+        {
+            if (!value.HasValue || !double.IsFinite(value.Value) || value.Value < 0) return null;
+            total += value.Value; any = true;
+        }
+        return any && double.IsFinite(total) ? total : null;
+    }
 }
 
 public sealed class PlayerScore
@@ -50,6 +75,7 @@ public sealed class PlayerScore
     public string Color { get; set; } = "FFFFFF";
     public double Damage { get; set; }
     public double Dps { get; set; }
+    public double? GameDps { get; set; }
     public double BossDamage { get; set; }
     public double BossDps { get; set; }
     public List<SpellScore> Spells { get; set; } = new();

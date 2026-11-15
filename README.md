@@ -41,7 +41,14 @@
 
 Для сбора статистики Brigade DPS необходим **хосту**. Игрокам, желающим видеть окно, нужна та же версия Brigade DPS. Остальные могут играть без мода. Протокол Brigade DPS отдельный: установленный у хоста старый DamageMeter не передаёт данные этому моду.
 
-Начиная с 0.1.2 используется протокол 2 с DPS каждого заклинания. Версии 0.1.2–0.1.9 совместимы по сети; более старые версии нужно обновить. Хост 0.1.8 передаёт отметку времени смерти босса; при более старом хосте отсчёт начинается при получении итогов.
+Начиная с 0.1.2 используется протокол 2 с DPS каждого заклинания. Версии 0.1.2–0.1.10 совместимы по сети; более старые версии нужно обновить. Хост 0.1.8 передаёт отметку времени смерти босса; при более старом хосте отсчёт начинается при получении итогов.
+
+В F5 «УВС команды и заклинаний» переключается между двумя режимами, отдельно для каждого зрителя:
+
+- **За интервал** — прежний режим по умолчанию: урон за последние N секунд / N. В начале забега используется прошедшее время, пока оно меньше N.
+- **Как в игре** — значение `SpellAttributes.Dps` из самой игры: `TotalPerformedDamage / (Time.time - StartTime)`. `StartTime` устанавливается при получении заклинания, поэтому у каждого спелла свой период усреднения. Строка игрока показывает сумму игровых УВС всех экипированных заклинаний, включая скрытые лимитом строк. Это сумма показателей спеллов, а не весь урон игрока / время забега. Урон и проценты продолжают показывать данные счётчика мода.
+
+Например, спелл нанёс 6000 урона за 60 секунд с момента получения и 2000 за последние 10 секунд: игровой УВС — 100, наш за интервал — 200. Для нативного режима нужен хост с 0.1.10 или новее; при отсутствии данных показывается «—». УВС босса в обоих режимах остаётся за интервал хоста и фиксируется после смерти босса.
 
 Интервал DPS задаётся хостом (1–60 секунд, по умолчанию 10). Используется внутриигровой таймер забега. Проценты в разделе босса показывают вклад игрока в урон команды, а не долю максимального здоровья босса. Строки заклинаний показывают долю в уроне соответствующего игрока.
 
@@ -49,7 +56,7 @@
 
 ## Установка
 
-Архив `slikfoul-BrigadeDps-0.1.9.zip` импортируется в r2modman через Import local mod. Включить BrigadeDps и запускать через Start modded. BepInExPack IL2CPP 6.0.788 указан как зависимость. Старый DamageMeter должен быть отключён.
+Архив `slikfoul-BrigadeDps-0.1.10.zip` импортируется в r2modman через Import local mod. Включить BrigadeDps и запускать через Start modded. BepInExPack IL2CPP 6.0.788 указан как зависимость. Старый DamageMeter должен быть отключён.
 
 В профиле с BepInExPack IL2CPP поместить `BrigadeDps.dll` в `BepInEx/plugins/slikfoul-BrigadeDps/` и запускать через Start modded. При обновлении игра должна быть закрыта.
 
@@ -67,11 +74,13 @@ pwsh -File ./package.ps1
 
 Исходники находятся в `src`, автономные проверки — в `tests`, метаданные и иконка пакета — в `packaging`. Скрипт `package.ps1` создаёт архив для r2modman в `dist`. Игровые сборки, извлечённые изображения, локальные установки и материалы исследования не входят в репозиторий или пакет; интерфейс использует ресурсы установленной игры во время работы.
 
-Для версии 0.1.9 сборка проходит без предупреждений; автономный набор содержит 105 проверок статистики, сетевых данных, локализации, положения окна и таймера итогов босса. Эти проверки не заменяют проверку интерфейса и сетевого матча в самой игре.
+Для версии 0.1.10 сборка проходит без предупреждений; автономный набор содержит 124 проверок статистики, сетевых данных, локализации, положения окна и таймера итогов босса и переключения режима УВС. Эти проверки не заменяют проверку интерфейса и сетевого матча в самой игре.
 
 ## English
 
 Meter and settings use the native dark card artwork with subdued ornamental lines. The upper border mirrors the lower border, without an emblem or upper arrows. Art is loaded from the game at runtime and is not bundled; a fallback frame is shown until the card assets are available. Brigade DPS shows party damage, rolling DPS, per-spell DPS and separate boss contributions. The UI follows the game's Russian/English locale and uses game fonts; other locales use English UI text. Spell names and icons come from the game.
+
+F5 offers two local player/spell DPS modes. **Rolling interval** remains the default (last N seconds of damage / N, using elapsed run time during startup). **Game value** reads native `SpellAttributes.Dps`: damage since the spell was equipped divided by `Time.time - StartTime`. Each spell has its own starting time. The player row sums all equipped spells, even those hidden by the row limit; this is not total player damage divided by run duration. Damage and percentages still use the mod's ledger. Native values require a host on 0.1.10+; unavailable values show a dash. Boss DPS remains rolling in both modes and freezes after defeat.
 
 F3 toggles the meter, F4 toggles spell rows, F5 opens settings. Drag the top row to move the window; hold Alt to release the cursor. The frame automatically fits the visible text and rows with compact column gaps. Long lists scroll at the configured screen-height limit.
 
@@ -79,6 +88,6 @@ Choose horizontal (right/left) and vertical (down/up) growth in F5 settings. Mov
 
 In F5 settings, enable spell-name initials or disable spell names for icons only. Unassigned damage is included in player totals but has no separate row. One continuous outer frame and background encloses both sections. A transparent ornamental divider with completed lower corner arcs separates the boss section from party totals, without a second stone rim; it follows scrolling and is included in automatic sizing. Defeated boss totals and the divider remain visible for 10 seconds by default. The F5 field "Boss results after defeat (s)" accepts 0–3600 seconds with keyboard entry (Enter to apply) or +/- buttons; 0 hides defeated bosses immediately. This is a local display preference. The real-time countdown continues while paused, on the results screen, or with the meter hidden. Spell percentages are relative to their player's total; boss percentages are relative to party boss damage.
 
-Install the ZIP using r2modman's local-mod import and launch with Start modded. The host and meter viewers need versions 0.1.2–0.1.9 (network compatible). Players without the mod can still join. Do not enable the old DamageMeter alongside Brigade DPS.
+Install the ZIP using r2modman's local-mod import and launch with Start modded. The host and meter viewers need versions 0.1.2–0.1.10 (network compatible). Players without the mod can still join. Do not enable the old DamageMeter alongside Brigade DPS.
 
-Build with .NET SDK 9 after launching the game once with BepInExPack IL2CPP to generate its `interop` assemblies. Use `-p:BepInExDir="..."` to override the default r2modman profile path. Run the commands above to build, execute the 105 standalone checks, and generate the local-import ZIP. Game assemblies and artwork are not distributed in this repository.
+Build with .NET SDK 9 after launching the game once with BepInExPack IL2CPP to generate its `interop` assemblies. Use `-p:BepInExDir="..."` to override the default r2modman profile path. Run the commands above to build, execute the 124 standalone checks, and generate the local-import ZIP. Game assemblies and artwork are not distributed in this repository.

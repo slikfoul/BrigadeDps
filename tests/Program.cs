@@ -4,6 +4,30 @@ using System.Text.Json;
 int checks = 0;
 void Assert(bool condition, string label) { if (!condition) throw new Exception(label); checks++; }
 void Equal(double expected, double actual, string label) => Assert(Math.Abs(expected - actual) < .000001, $"{label}: {actual} != {expected}");
+Assert(default(DpsDisplayMode) == DpsDisplayMode.Rolling, "Rolling remains the default mode");
+Equal(25, DpsDisplay.Select(DpsDisplayMode.Rolling, 25, 10).Value, "Rolling mode preserves the recent damage rate");
+Equal(10, DpsDisplay.Select(DpsDisplayMode.Game, 25, 10).Value, "Game mode selects the native value rather than a run average");
+Assert(DpsDisplay.Select(DpsDisplayMode.Game, 25, null) == null, "Older hosts cannot silently fall back to a different formula");
+Equal(0, DpsDisplay.Select(DpsDisplayMode.Game, 25, 0).Value, "A real native zero is available data");
+Equal(12.5, DpsDisplay.NativeValue(12.5, 500, 40).Value, "Finite native values are preserved exactly");
+Equal(0, DpsDisplay.NativeValue(double.NaN, 0, 0).Value, "New unused spell handles native zero divided by zero");
+Assert(DpsDisplay.NativeValue(double.PositiveInfinity, 10, 0) == null, "Invalid nonzero native damage rate is unavailable");
+Assert(DpsDisplay.NativeValue(double.NaN, 10, 3) == null, "Invalid native sample cannot enter JSON");
+Assert(DpsDisplay.NativeValue(-1, 10, 3) == null, "Negative native rate is unavailable");
+Equal(30, DpsDisplay.Sum(new double?[] { 10, 20, 0 }).Value, "Player game rate sums all equipped spells");
+Assert(DpsDisplay.Sum(new double?[] { 10, null }) == null, "A partial spell set is not presented as a complete player rate");
+Assert(DpsDisplay.Sum(Array.Empty<double?>()) == null, "An absent native spell set is unavailable");
+Assert(DpsDisplay.Sum(new double?[] { double.MaxValue, double.MaxValue }) == null, "Overflow cannot enter JSON");
+var nativePayload = new MeterSnapshot { Players = new() { new PlayerScore {
+    Id = 1, Dps = 50, GameDps = 15, Spells = new() { new SpellScore { Spell = 4, Dps = 50, GameDps = 15 } }
+} } };
+var nativeRoundtrip = JsonSerializer.Deserialize<MeterSnapshot>(JsonSerializer.Serialize(nativePayload));
+Equal(15, nativeRoundtrip.Players[0].GameDps.Value, "Native player DPS survives transport");
+Equal(15, nativeRoundtrip.Players[0].Spells[0].GameDps.Value, "Native spell DPS survives transport");
+Equal(50, nativeRoundtrip.Players[0].Spells[0].Dps, "Native transport leaves rolling values intact");
+var oldPayload = JsonSerializer.Deserialize<MeterSnapshot>("{\"Protocol\":2,\"Players\":[{\"Id\":1,\"Dps\":50,\"Spells\":[{\"Spell\":4,\"Dps\":50}]}]}");
+Assert(oldPayload.Players[0].GameDps == null && oldPayload.Players[0].Spells[0].GameDps == null, "Legacy packets identify missing native data");
+Assert(UiText.Translate("Как в игре", "en-US") == "Game value", "Native mode has an English label");
 var data = new BattleLedger();
 data.Identify(1, "one", "FF0000"); data.Identify(2, "two", "00FF00"); data.Identify(3, "idle", "FFFFFF");
 data.Record(1, 4, 120, 1, false);
