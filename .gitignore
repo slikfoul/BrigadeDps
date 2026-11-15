@@ -1,0 +1,25 @@
+**/bin/
+**/obj/
+.vs/
+.idea/
+*.user
+*.suo
+*.log
+*.zip
+*.dll
+*.pdb
+
+# Local installations, research and extracted game assets.
+/dist/
+/backups/
+/inspection/
+/install-local.ps1
+/preview-*.ps1
+
+# Local credentials and generation instructions.
+.env
+.env.*
+*.pfx
+*.key
+PROMPTS.md
+*.prompt

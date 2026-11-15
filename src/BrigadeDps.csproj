@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>BrigadeDps</AssemblyName>
+    <RootNamespace>BrigadeDps</RootNamespace>
+    <Version>0.1.9</Version>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS8632;CS0436</NoWarn>
+    <NuGetAudit>false</NuGetAudit>
+    <BepInExDir Condition="'$(BepInExDir)' == ''">$(APPDATA)\r2modmanPlus-local\TheSpellBrigade\profiles\Default\BepInEx</BepInExDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(BepInExDir)\core\*.dll" Exclude="$(BepInExDir)\core\Iced.dll;$(BepInExDir)\core\dobby.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\interop\*.dll" Private="false" />
+  </ItemGroup>
+</Project>
