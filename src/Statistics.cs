@@ -93,6 +93,54 @@ public sealed class MeterSnapshot
     public List<PlayerScore> Players { get; set; } = new();
 }
 
+// Native totals are cumulative for the whole run. They replace display totals,
+// never feed the rolling hit buffer or the separate boss encounter counters.
+public sealed class GameDamageTotals
+{
+    private readonly Dictionary<ulong, (double Total, Dictionary<int, double> Spells)> players = new();
+
+    public void Clear() => players.Clear();
+
+    public bool Update(ulong player, double total, IEnumerable<KeyValuePair<int, double>> spells)
+    {
+        if (!double.IsFinite(total) || total < 0 || spells == null) return false;
+        var values = new Dictionary<int, double>();
+        foreach (var spell in spells)
+        {
+            if (spell.Key < 0 || !double.IsFinite(spell.Value) || spell.Value < 0) return false;
+            values[spell.Key] = spell.Value;
+        }
+        players[player] = (total, values);
+        return true;
+    }
+
+    public void Apply(MeterSnapshot snapshot)
+    {
+        foreach (var entry in players)
+        {
+            var player = snapshot.Players.FirstOrDefault(p => p.Id == entry.Key);
+            if (player == null)
+            {
+                player = new PlayerScore { Id = entry.Key };
+                snapshot.Players.Add(player);
+            }
+            player.Damage = entry.Value.Total;
+            foreach (var native in entry.Value.Spells)
+            {
+                var spell = player.Spells.FirstOrDefault(s => s.Spell == native.Key);
+                if (spell == null)
+                {
+                    spell = new SpellScore { Spell = native.Key };
+                    player.Spells.Add(spell);
+                }
+                spell.Damage = native.Value;
+            }
+            player.Spells.Sort((a, b) => b.Damage.CompareTo(a.Damage));
+        }
+        snapshot.Players.Sort((a, b) => b.Damage.CompareTo(a.Damage));
+    }
+}
+
 public sealed class BattleLedger
 {
     private readonly Dictionary<ulong, DamageSeries> all = new();

@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace BrigadeDps;
 
-[BepInPlugin(Id, "Brigade DPS", "1.0.0")]
+[BepInPlugin(Id, "Brigade DPS", "1.0.1")]
 [BepInIncompatibility("girthy_mods.DamageMeter")]
 public sealed class EntryPoint : BasePlugin
 {
@@ -19,7 +19,7 @@ public sealed class EntryPoint : BasePlugin
         Settings = new Options(Config);
         new Harmony(Id).PatchAll(typeof(GameBridge));
         view = AddComponent<MeterView>();
-        Log.LogInfo("Brigade DPS 1.0.0 loaded: F3 meter, F4 spells, F5 settings; configurable growth directions and draggable settings, per-spell DPS, RU/EN.");
+        Log.LogInfo("Brigade DPS 1.0.1 loaded: F3 meter, F4 spells, F5 settings; configurable growth directions and draggable settings, per-spell DPS, RU/EN.");
     }
 }
 

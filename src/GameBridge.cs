@@ -14,8 +14,10 @@ internal static class GameBridge
     private const string Channel = "slikfoul.BrigadeDps/state/2";
     internal const int ExplosionSource = -10, TornadoSource = -20, MiscSource = -30;
     private static readonly BattleLedger ledger = new();
+    private static readonly GameDamageTotals gameDamage = new();
     private static readonly HashSet<ulong> observedBosses = new(), livingBosses = new();
     private static PlayerStats[] nativePlayerStats = Array.Empty<PlayerStats>();
+    private static ServerPlayerStatsTracker nativeDamageTracker;
     private static RunManager run;
     private static RunOverviewPanel results;
     private static CustomMessagingManager messaging;
@@ -79,6 +81,8 @@ internal static class GameBridge
                     ledger.Identify(player.OwnerClientId, player.GetDisplayName(), ColorUtility.ToHtmlStringRGB(player.PlayerColor));
                 }
                 nativePlayerStats = Object.FindObjectsOfType<PlayerStats>().ToArray();
+                if (nativeDamageTracker == null || nativeDamageTracker.WasCollected)
+                    nativeDamageTracker = Object.FindObjectOfType<ServerPlayerStatsTracker>();
             }
             Current = CreateSnapshot();
             if (Time.unscaledTime >= nextSend) Publish();
@@ -88,7 +92,9 @@ internal static class GameBridge
 
     private static MeterSnapshot CreateSnapshot()
     {
+        CaptureGameDamage();
         var result = ledger.Snapshot(lastTime, EntryPoint.Settings.Window.Value);
+        gameDamage.Apply(result);
         foreach (var player in result.Players)
         {
             // Retain the last native sample if the player object is already gone
@@ -119,6 +125,31 @@ internal static class GameBridge
             catch (Exception ex) { Error("Native spell DPS", ex); }
         }
         return result;
+    }
+
+    private static void CaptureGameDamage()
+    {
+        if (ended || nativeDamageTracker == null || nativeDamageTracker.WasCollected || !nativeDamageTracker.IsSpawned) return;
+        try
+        {
+            foreach (var tracker in nativeDamageTracker.playerStatsTrackers)
+            {
+                if (tracker == null) continue;
+                var stats = tracker.GetStats();
+                var spells = tracker.GetSpellStats();
+                if (stats == null || spells == null || !stats.TryGetValue(GameplayStatType.EnemyDamageDealt, out float enemyDamage)) continue;
+                stats.TryGetValue(GameplayStatType.TeammateDamageDealt, out float teammateDamage);
+                var totals = new Dictionary<int, double>();
+                foreach (var spell in spells)
+                {
+                    if (spell.Value == null) throw new InvalidOperationException("Incomplete native spell statistics");
+                    totals[(int)spell.Key] = spell.Value.TotalPerformedDamage;
+                }
+                // Same total as PlayerGameplayStats.CalculateTotalDamageDealt().
+                gameDamage.Update(tracker.TrackerClientId, enemyDamage + teammateDamage, totals);
+            }
+        }
+        catch (Exception ex) { Error("Native damage totals", ex); }
     }
 
     private static void Publish()
@@ -162,6 +193,7 @@ internal static class GameBridge
     {
         run = instance; ended = false; lastTime = 0; lastBossDeath = 0;
         ledger.Clear(); observedBosses.Clear(); livingBosses.Clear();
+        gameDamage.Clear(); nativeDamageTracker = null;
         nativePlayerStats = Array.Empty<PlayerStats>();
         Current = new MeterSnapshot(); Received = false; nextSend = nextRoster = 0;
     }
@@ -172,7 +204,11 @@ internal static class GameBridge
     [HarmonyPatch(typeof(RunManager), nameof(RunManager.StartRunOnClientRpc)), HarmonyPrefix]
     private static void Starting(RunManager __instance)
     {
-        if (__instance.__rpc_exec_stage == NetworkBehaviour.__RpcExecStage.Execute) NewRun(__instance);
+        if (__instance.__rpc_exec_stage != NetworkBehaviour.__RpcExecStage.Execute) return;
+        // StartNewCycle calls this same RPC. Only a different run owns new totals.
+        if (run == null || run.WasCollected || run.Pointer != __instance.Pointer) NewRun(__instance);
+        ended = false;
+        nextRoster = nextSend = 0;
     }
 
     [HarmonyPatch(typeof(RunManager), nameof(RunManager.OnDestroy)), HarmonyPrefix]

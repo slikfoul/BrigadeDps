@@ -9,6 +9,7 @@ A party damage meter for The Spell Brigade (Unity IL2CPP, BepInEx 6).
 ## Features
 
 - Total damage, DPS and damage share for each player and spell, with native spell names and icons.
+- DPS and damage values always display one decimal place, including abbreviated thousands and millions.
 - Russian or English UI based on the game language, using game fonts. Other languages use English UI text.
 - Full spell names, word initials or icons only, configurable in F5 settings.
 - A separate boss section showing damage, DPS and each player's share of party damage to the boss. Damage to other enemies is excluded from this section.
@@ -16,7 +17,7 @@ A party damage meter for The Spell Brigade (Unity IL2CPP, BepInEx 6).
 - A compact table that automatically fits the visible text and rows, with small column gaps and centered headings.
 - Move the meter by dragging its top row. Choose horizontal growth (right/left) and vertical growth (down/up) in settings. Moving the meter preserves these directions, and the frame stays within screen bounds.
 - Move the settings window by dragging its title. Window positions persist between launches.
-- Unassigned damage remains in player totals without a separate row.
+- Player totals follow the game's total damage statistic; spell totals follow its per-spell statistics. Damage without a spell entry has no separate row.
 - In-game settings for visibility, spell icons and names, bosses, results, solo play, position locking, scale, opacity, height limit, spell count, DPS mode and interval, and shortcuts.
 - The meter appears during an active run and on the results screen; it stays hidden in the main menu and lobby.
 
@@ -43,7 +44,7 @@ In F5, **Player and spell DPS** switches between two modes independently for eac
 
 For example, if a spell dealt 6,000 damage over 60 seconds since it was equipped, including 2,000 damage in the last 10 seconds, its game DPS is **100** and its rolling DPS is **200**.
 
-Game values require a host running version 0.1.10 or newer. Unavailable values appear as a dash. Damage totals and percentages continue to use the mod's damage records in both modes. Spell percentages are relative to their player's total damage.
+Game values require a host running version 0.1.10 or newer. Unavailable values appear as a dash. Damage totals and percentages use the game's cumulative run statistics in both modes and carry over across loops. This requires the host to run version 1.0.1 or newer. Spell percentages are relative to their player's total damage.
 
 ## Boss statistics
 
@@ -59,7 +60,7 @@ The **host** needs Brigade DPS to collect statistics. Players who want to see th
 
 ## Installation
 
-Import `slikfoul-BrigadeDps-1.0.0.zip` using **Import local mod** in r2modman, enable BrigadeDps and launch with **Start modded**. BepInExPack IL2CPP 6.0.788 is the required dependency.
+Import `slikfoul-BrigadeDps-1.0.1.zip` using **Import local mod** in r2modman, enable BrigadeDps and launch with **Start modded**. BepInExPack IL2CPP 6.0.788 is the required dependency.
 
 For manual installation into a profile with BepInExPack IL2CPP, place `BrigadeDps.dll` in `BepInEx/plugins/slikfoul-BrigadeDps/`. Close the game before updating.
 
@@ -77,4 +78,4 @@ Building requires .NET SDK 9 and an installed copy of the game with BepInExPack 
 
 Source code is in `src`, standalone checks in `tests`, and package metadata and the icon in `packaging`. The packaging script creates the r2modman ZIP in `dist`. Game assemblies, extracted artwork and local research files are not included in the repository or package.
 
-Version 1.0.0 builds without warnings and passes 124 standalone checks covering statistics, network data, localization, window positioning, boss-result retention and DPS mode selection. These checks do not replace in-game UI and multiplayer testing.
+Version 1.0.1 builds without warnings and passes 151 standalone checks covering statistics, network data, localization, window positioning, boss-result retention, DPS mode selection and cumulative damage across loops. These checks do not replace in-game UI and multiplayer testing.

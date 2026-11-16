@@ -722,8 +722,8 @@ public sealed class MeterView : MonoBehaviour
     }
 
     private static string Percent(double part, double total) => total > 0 ? (100 * part / total).ToString("0.0", CultureInfo.InvariantCulture) : "0.0";
-    private static string Number(double value) => value >= 1e6 ? (value / 1e6).ToString("0.##", CultureInfo.InvariantCulture) + "M"
-        : value >= 1e4 ? (value / 1e3).ToString("0.#", CultureInfo.InvariantCulture) + "k" : value.ToString("0", CultureInfo.InvariantCulture);
+    private static string Number(double value) => value >= 1e6 ? (value / 1e6).ToString("0.0", CultureInfo.InvariantCulture) + "M"
+        : value >= 1e4 ? (value / 1e3).ToString("0.0", CultureInfo.InvariantCulture) + "k" : value.ToString("0.0", CultureInfo.InvariantCulture);
     private static Color PlayerTint(string value)
     {
         try

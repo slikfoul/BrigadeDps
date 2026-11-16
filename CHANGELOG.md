@@ -1,3 +1,8 @@
+# 1.0.1
+- Player and spell damage totals use the game's cumulative run statistics across all loops.
+- Rolling DPS continues across loop transitions, with separate per-encounter boss statistics.
+- DPS and damage values always display one decimal place, including abbreviated thousands and millions.
+
 # 1.0.0
 - Party and per-spell damage, DPS and damage shares with native spell icons and names.
 - Choose rolling DPS or the game's own spell DPS in the in-game settings.
