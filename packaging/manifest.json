@@ -1,6 +1,6 @@
 {
   "name": "BrigadeDps",
-  "version_number": "1.0.1",
+  "version_number": "1.0.2",
   "website_url": "https://github.com/slikfoul/BrigadeDps",
   "description": "Party and per-spell DPS, boss damage shares, spell initials or icons only, and a compact auto-sized meter. Host required.",
   "dependencies": [

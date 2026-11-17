@@ -200,7 +200,9 @@ public sealed class BattleLedger
                 Id = entry.Key, Name = identity.Name ?? "", Color = identity.Color ?? "FFFFFF",
                 Damage = entry.Value.Total, Dps = entry.Value.Rate(time, 0, window),
                 BossDamage = target?.Total ?? 0,
-                BossDps = target?.Rate(bossNow, bossStart, window) ?? 0,
+                // Boss damage averages over the entire encounter, independently
+                // of the party's rolling window. bossNow freezes on defeat.
+                BossDps = (target?.Total ?? 0) / Math.Max(0.1, result.BossSeconds),
                 Spells = entry.Value.Spells.OrderByDescending(x => x.Value.Total)
                     .Select(x => new SpellScore { Spell = x.Key, Damage = x.Value.Total, Dps = x.Value.Rate(time, 0, window) }).ToList()
             });

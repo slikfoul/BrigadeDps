@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace BrigadeDps;
 
-[BepInPlugin(Id, "Brigade DPS", "1.0.1")]
+[BepInPlugin(Id, "Brigade DPS", "1.0.2")]
 [BepInIncompatibility("girthy_mods.DamageMeter")]
 public sealed class EntryPoint : BasePlugin
 {
@@ -19,7 +19,7 @@ public sealed class EntryPoint : BasePlugin
         Settings = new Options(Config);
         new Harmony(Id).PatchAll(typeof(GameBridge));
         view = AddComponent<MeterView>();
-        Log.LogInfo("Brigade DPS 1.0.1 loaded: F3 meter, F4 spells, F5 settings; configurable growth directions and draggable settings, per-spell DPS, RU/EN.");
+        Log.LogInfo("Brigade DPS 1.0.2 loaded: F3 meter, F4 spells, F5 settings; configurable growth directions and draggable settings, per-spell DPS, RU/EN.");
     }
 }
 
@@ -60,7 +60,7 @@ internal sealed class Options
         EdgeMarginY = file.Bind("Window", "EdgeMarginY", .18f, new ConfigDescription("Distance from the chosen vertical edge as fraction of screen height.", new AcceptableValueRange<float>(0, 1)));
         Height = file.Bind("Window", "MaxHeight", 0.72f, new ConfigDescription("Maximum height as fraction of the screen; scroll overflowing rows.", new AcceptableValueRange<float>(0.3f, 0.95f)));
         Window = file.Bind("General", "DpsSeconds", 10, new ConfigDescription("Rolling DPS window, controlled by host.", new AcceptableValueRange<int>(1, 60)));
-        DpsMode = file.Bind("Display", "DpsMode", DpsDisplayMode.Rolling, "Rolling: recent host-defined interval. Game: each spell's native DPS since it was equipped; player row sums equipped spells. Boss DPS remains rolling. Local display preference.");
+        DpsMode = file.Bind("Display", "DpsMode", DpsDisplayMode.Rolling, "Rolling: recent host-defined interval. Game: each spell's native DPS since it was equipped; player row sums equipped spells. Boss DPS averages total boss damage over the entire encounter. Local display preference.");
         SpellLimit = file.Bind("Display", "SpellLimit", 8, new ConfigDescription("Maximum spell rows per player.", new AcceptableValueRange<int>(1, 20)));
         ToggleKey = file.Bind("Keys", "Meter", "F3", "Unity Input System key name.");
         DetailKey = file.Bind("Keys", "Spells", "F4", "Unity Input System key name.");

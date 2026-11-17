@@ -1,3 +1,6 @@
+# 1.0.2
+- Boss DPS averages all damage over the full encounter and freezes at defeat, independently of the rolling DPS interval.
+
 # 1.0.1
 - Player and spell damage totals use the game's cumulative run statistics across all loops.
 - Rolling DPS continues across loop transitions, with separate per-encounter boss statistics.
